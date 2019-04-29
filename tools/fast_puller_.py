@@ -69,9 +69,9 @@ def main():
 
   if not args.protocol:
     logging.fatal('--protocol is a required argument')
-  
+
   protocol = args.protocol
-  
+
   if protocol !='http' and protocol !='https':
     logging.fatal('Protocol should be http or https')
   retry_factory = retry.Factory()
@@ -103,17 +103,13 @@ def main():
 
   try:
     logging.info('Pulling manifest list from %r ...', name)
-    print('HERE0! protocol: %s' %protocol)
     with image_list.FromRegistry(name, protocol, creds, transport) as img_list:
-      print('HERE! %s' %img_list)
       if img_list.exists():
-        print('HERE2!')
         platform = image_list.Platform({
             'architecture': _PROCESSOR_ARCHITECTURE,
             'os': _OPERATING_SYSTEM,
         })
         with img_list.resolve(platform) as default_child:
-          print('HERE3')
           save.fast(default_child, args.directory, threads=_THREADS)
           return
 
@@ -128,7 +124,6 @@ def main():
       with v2_compat.V22FromV2(v2_img) as v2_2_img:
         save.fast(v2_2_img, args.directory, threads=_THREADS)
         return
-    print('HERE4!')
   # pylint: disable=broad-except
   except Exception as e:
     logging.fatal('Error pulling and saving image %s: %s', name, e)

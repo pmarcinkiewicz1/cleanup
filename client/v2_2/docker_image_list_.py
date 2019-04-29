@@ -237,22 +237,14 @@ class FromRegistry(DockerImageList):
     self._original_transport = transport
     self._accepted_mimes = accepted_mimes
     self._response = {}
-    print('from registry name: %s' %name)
-    print('from registry protocol: %s' %protocol)
-    print('from registry creds: %s' %basic_creds)
-    print('from registry transport: %s' %transport)
-    print('from registry mimes: %s' %accepted_mimes)
-    print('from registry response: %s' %self._response)
   def _content(self,
                suffix,
                accepted_mimes = None,
                cache = True):
-    print('def content pocza')
     """Fetches content of the resources from registry by http calls."""
     if isinstance(self._name, docker_name.Repository):
       suffix = '{repository}/{suffix}'.format(
           repository=self._name.repository, suffix=suffix)
-    #print('## protocol ##: %s' %protocol)
     if suffix in self._response:
       return self._response[suffix]
 
@@ -265,7 +257,6 @@ class FromRegistry(DockerImageList):
         accepted_mimes=accepted_mimes)
     if cache:
       self._response[suffix] = content
-    print('def content ok ? ')
     return content
 
   def images(self):

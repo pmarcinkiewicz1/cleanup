@@ -227,36 +227,45 @@ class FromRegistry(DockerImageList):
   def __init__(
       self,
       name,
+      protocol,
       basic_creds,
       transport,
       accepted_mimes = docker_http.MANIFEST_LIST_MIMES):
     self._name = name
+    self._protocol = protocol
     self._creds = basic_creds
     self._original_transport = transport
     self._accepted_mimes = accepted_mimes
     self._response = {}
-
+    print('from registry name: %s' %name)
+    print('from registry protocol: %s' %protocol)
+    print('from registry creds: %s' %basic_creds)
+    print('from registry transport: %s' %transport)
+    print('from registry mimes: %s' %accepted_mimes)
+    print('from registry response: %s' %self._response)
   def _content(self,
                suffix,
                accepted_mimes = None,
                cache = True):
+    print('def content pocza')
     """Fetches content of the resources from registry by http calls."""
     if isinstance(self._name, docker_name.Repository):
       suffix = '{repository}/{suffix}'.format(
           repository=self._name.repository, suffix=suffix)
-
+    #print('## protocol ##: %s' %protocol)
     if suffix in self._response:
       return self._response[suffix]
 
     _, content = self._transport.Request(
         '{scheme}://{registry}/v2/{suffix}'.format(
-            scheme=docker_http.Scheme(self._name.registry),
+            scheme=self._protocol,
             registry=self._name.registry,
             suffix=suffix),
         accepted_codes=[six.moves.http_client.OK],
         accepted_mimes=accepted_mimes)
     if cache:
       self._response[suffix] = content
+    print('def content ok ? ')
     return content
 
   def images(self):
@@ -275,9 +284,9 @@ class FromRegistry(DockerImageList):
       media_type = entry['mediaType']
 
       if media_type in docker_http.MANIFEST_LIST_MIMES:
-        image = FromRegistry(name, self._creds, self._original_transport)
+        image = FromRegistry(name, self._protocol, self._creds, self._original_transport)
       elif media_type in docker_http.SUPPORTED_MANIFEST_MIMES:
-        image = v2_2_image.FromRegistry(name, self._creds,
+        image = v2_2_image.FromRegistry(name, self._creds, self._protocol,
                                         self._original_transport, [media_type])
       else:
         raise InvalidMediaTypeError('Invalid media type: ' + media_type)
@@ -352,7 +361,7 @@ class FromRegistry(DockerImageList):
   def __enter__(self):
     # Create a v2 transport to use for making authenticated requests.
     self._transport = docker_http.Transport(
-        self._name, self._creds, self._original_transport, docker_http.PULL)
+        self._name, self._protocol, self._creds, self._original_transport, docker_http.PULL)
 
     return self
 

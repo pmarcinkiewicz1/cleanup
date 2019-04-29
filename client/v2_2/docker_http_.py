@@ -184,9 +184,11 @@ class Transport(object):
   """
 
   def __init__(self, name,
+               protocol,
                creds,
                transport, action):
     self._name = name
+    self._protocol = protocol
     self._basic_creds = creds
     self._transport = transport
     self._action = action
@@ -194,7 +196,7 @@ class Transport(object):
 
     _CheckState(action in ACTIONS,
                 'Invalid action supplied to docker_http.Transport: %s' % action)
-
+    #print('protcol var: %s' %protocol)
     # Ping once to establish realm, and then get a good credential
     # for use with this transport.
     self._Ping()
@@ -218,9 +220,11 @@ class Transport(object):
         'content-type': 'application/json',
         'user-agent': docker_name.USER_AGENT,
     }
+    #self._protocol
+    #print('protcol var in ping: %s' %self._protocol)
     resp, content = self._transport.request(
         '{scheme}://{registry}/v2/'.format(
-            scheme=Scheme(self._name.registry), registry=self._name.registry),
+            scheme=self._protocol, registry=self._name.registry),
         'GET',
         body=None,
         headers=headers)
@@ -433,6 +437,8 @@ def Scheme(endpoint):
   """Returns https scheme for all the endpoints except localhost."""
   if endpoint.startswith('localhost:'):
     return 'http'
+  #elif endpoint.startswith('hub-publish'):
+    #return 'https'
   elif re.match(r'.*\.local(?:host)?(?::\d{1,5})?$', endpoint):
     return 'http'
   else:

@@ -50,6 +50,8 @@ parser.add_argument(
 parser.add_argument(
     '--directory', action='store', help='Where to save the image\'s files.')
 
+parser.add_argument(                                                                                                                                                                                                                             '--protocol', action='store', help='Protcol') 
+
 _THREADS = 8
 
 _PROCESSOR_ARCHITECTURE = 'amd64'
@@ -65,6 +67,13 @@ def main():
   if not args.name or not args.directory:
     logging.fatal('--name and --directory are required arguments.')
 
+  if not args.protocol:
+    logging.fatal('--protocol is a required argument')
+  
+  protocol = args.protocol
+  
+  if protocol !='http' and protocol !='https':
+    logging.fatal('Protocol should be http or https')
   retry_factory = retry.Factory()
   retry_factory = retry_factory.WithSourceTransportCallable(httplib2.Http)
   transport = transport_pool.Http(retry_factory.Build, size=_THREADS)
@@ -94,20 +103,22 @@ def main():
 
   try:
     logging.info('Pulling manifest list from %r ...', name)
-    with image_list.FromRegistry(name, creds, transport) as img_list:
+    print('HERE0! protocol: %s' %protocol)
+    with image_list.FromRegistry(name, protocol, creds, transport) as img_list:
+      print('HERE! %s' %img_list)
       if img_list.exists():
+        print('HERE2!')
         platform = image_list.Platform({
             'architecture': _PROCESSOR_ARCHITECTURE,
             'os': _OPERATING_SYSTEM,
         })
-        # pytype: disable=wrong-arg-types
         with img_list.resolve(platform) as default_child:
+          print('HERE3')
           save.fast(default_child, args.directory, threads=_THREADS)
           return
-        # pytype: enable=wrong-arg-types
 
     logging.info('Pulling v2.2 image from %r ...', name)
-    with v2_2_image.FromRegistry(name, creds, transport, accept) as v2_2_img:
+    with v2_2_image.FromRegistry(name, protocol, creds, transport, accept) as v2_2_img:
       if v2_2_img.exists():
         save.fast(v2_2_img, args.directory, threads=_THREADS)
         return
@@ -117,6 +128,7 @@ def main():
       with v2_compat.V22FromV2(v2_img) as v2_2_img:
         save.fast(v2_2_img, args.directory, threads=_THREADS)
         return
+    print('HERE4!')
   # pylint: disable=broad-except
   except Exception as e:
     logging.fatal('Error pulling and saving image %s: %s', name, e)

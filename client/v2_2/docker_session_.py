@@ -67,11 +67,11 @@ class Push(object):
       ValueError: an incorrectly typed argument was supplied.
     """
     self._name = name
-    self._transport = docker_http.Transport(name, creds, transport,
+    self._protocol = protocol
+    self._transport = docker_http.Transport(name, protocol, creds, transport,
                                             docker_http.PUSH)
     self._mount = mount
     self._threads = threads
-    self._protocol = protocol
   def _scheme_and_host(self):
     return '{scheme}://{registry}'.format(
 	scheme = self._protocol,

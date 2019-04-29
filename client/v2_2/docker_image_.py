@@ -237,10 +237,12 @@ class FromRegistry(DockerImage):
 
   def __init__(self,
                name,
+               protocol,
                basic_creds,
                transport,
                accepted_mimes = docker_http.MANIFEST_SCHEMA2_MIMES):
     self._name = name
+    self._protocol = protocol
     self._creds = basic_creds
     self._original_transport = transport
     self._accepted_mimes = accepted_mimes
@@ -260,7 +262,7 @@ class FromRegistry(DockerImage):
 
     _, content = self._transport.Request(
         '{scheme}://{registry}/v2/{suffix}'.format(
-            scheme=docker_http.Scheme(self._name.registry),
+            scheme=self._protocol,
             registry=self._name.registry,
             suffix=suffix),
         accepted_codes=[six.moves.http_client.OK],
@@ -331,7 +333,7 @@ class FromRegistry(DockerImage):
 
     resp, unused_content = self._transport.Request(
         '{scheme}://{registry}/v2/{suffix}'.format(
-            scheme=docker_http.Scheme(self._name.registry),
+            scheme=self._protocol,
             registry=self._name.registry,
             suffix=suffix),
         method='HEAD',
@@ -357,7 +359,7 @@ class FromRegistry(DockerImage):
       raise ValueError('Expected docker_name.Registry for "name"')
 
     url = '{scheme}://{registry}/v2/_catalog?n={page_size}'.format(
-        scheme=docker_http.Scheme(self._name.registry),
+        scheme=self._protocol,
         registry=self._name.registry,
         page_size=page_size)
 
@@ -377,7 +379,7 @@ class FromRegistry(DockerImage):
   def __enter__(self):
     # Create a v2 transport to use for making authenticated requests.
     self._transport = docker_http.Transport(
-        self._name, self._creds, self._original_transport, docker_http.PULL)
+        self._name, self._protocol, self._creds, self._original_transport, docker_http.PULL)
 
     return self
 
